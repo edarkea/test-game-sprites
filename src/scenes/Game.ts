@@ -2,7 +2,7 @@ import { Scene } from 'phaser';
 
 export class Game extends Scene {
 
-    private scaleSize: number = 5;
+    private scaleSize: number = 1.5;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private frameRate: number = 10;
     private velocity: number = 2;
@@ -17,65 +17,36 @@ export class Game extends Scene {
 
     preload() {
         this.load.setPath('assets');
-
         // Cargar la hoja de sprites (tileset)
-        this.load.image('tiles', 'mountain_landscape.png');
-
-
+        this.load.tilemapTiledJSON('map', 'maps/desert.json');
+        this.load.image('mountain', 'maps/mountain_landscape.png');
         this.load.spritesheet('player', 'the_knight.png', { frameWidth: 32, frameHeight: 32 });
-
     }
 
     create() {
         const centerX = this.cameras.main.width / 2;
         const centerY = this.cameras.main.height / 2;
 
-        const map = this.make.tilemap({
-            tileWidth: 32,
-            tileHeight: 32,
-            width: 10,
-            height: 10
-        })
-
-        const tileset = map.addTilesetImage('tiles');
-
+        const map = this.make.tilemap({ key: 'map' });
+        const tileset = map.addTilesetImage('mountain_landscape', 'mountain');
         if (!tileset) {
-            console.error('Error: No se pudo cargar el tileset.');
             return;
         }
 
-        this.layerMountain = map.createBlankLayer('terrain', tileset, centerX - 160, centerY - 160)?.setScale(this.scaleSize);
-
-        if (!this.layerMountain) {
-            console.error('Error: No se pudo crear la capa.');
+        this.layerMountain = map.createLayer('background', tileset, centerX - 160, centerY - 160)?.setScale(this.scaleSize);
+        
+        if(!this.layerMountain){
             return;
-        }
-
-        const roadLayer = [
-            [11, 12, 12, 12, 12, 12, 12, 12, 12, 13],
-            [27, 28, 28, 28, 28, 28, 28, 28, 28, 29],
-            [27, 28, 28, 28, 28, 28, 28, 28, 28, 29],
-            [27, 28, 28, 28, 28, 28, 28, 28, 28, 29],
-            [27, 28, 28, 28, 28, 28, 28, 28, 28, 29],
-            [27, 28, 28, 28, 28, 28, 28, 28, 28, 29],
-            [27, 28, 28, 28, 28, 28, 28, 28, 28, 29],
-            [43, 44, 44, 44, 44, 44, 44, 44, 44, 45],
-        ];
-
-        for (let y = 0; y < roadLayer.length; y++) {
-            for (let x = 0; x < roadLayer[y].length; x++) {
-                this.layerMountain.putTileAt(roadLayer[y][x], x, y)
-            }
         }
 
         this.player = this.physics.add.sprite(centerX, centerY, 'player').setScale(this.scaleSize);
 
-        /* this.cameras.main.startFollow(this.player, false, 0, 0); */
+        this.cameras.main.startFollow(this.player, false, 0, 0);
         /* this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels); */
 
-
         this.layerMountain.setCollision(5); // El tile 5 es un "camino bloqueado"
-        /*  this.physics.add.collider(this.player, this.layerMountain); */
+
+        this.physics.add.collider(this.player, this.layerMountain);
 
         if (this.input.keyboard) {
             this.cursors = this.input.keyboard.createCursorKeys();
@@ -139,7 +110,6 @@ export class Game extends Scene {
     update(): void {
         this.moveCharacter();
         this.moveMap();
-        /* this.controls.update(delta); */
     }
 
     moveMap(): void {
@@ -172,27 +142,6 @@ export class Game extends Scene {
             this.player.stop();
         }
 
-        /* if (this.cursors.down.isDown) {
-            this.player.setVelocityY(this.velocity);
-            this.player.setVelocityX(0);
-            this.player.play('walk-down', true);
-        } else if (this.cursors.up.isDown) {
-            this.player.setVelocityY(-this.velocity);
-            this.player.setVelocityX(0);
-            this.player.play('walk-up', true);
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(this.velocity);
-            this.player.setVelocityY(0);
-            this.player.play('walk-right', true);
-        } else if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-this.velocity);
-            this.player.setVelocityY(0);
-            this.player.play('walk-left', true);
-        } else {
-            this.player.setVelocityY(0);
-            this.player.setVelocityX(0);
-            this.player.stop();
-        } */
 
         const currentFrame = this.player.anims.currentFrame?.index;
 
