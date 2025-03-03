@@ -10,8 +10,6 @@ export class Game extends Scene {
     private layerMountain: Phaser.Tilemaps.TilemapLayer | null | undefined;
     private player: Phaser.Physics.Arcade.Sprite;
 
-    /*  private controls: Phaser.Cameras.Controls.FixedKeyControl; */
-
     constructor() {
         super('Game');
     }
@@ -20,14 +18,11 @@ export class Game extends Scene {
     preload() {
         this.load.setPath('assets');
 
+        // Cargar la hoja de sprites (tileset)
         this.load.image('tiles', 'mountain_landscape.png');
 
-        this.load.spritesheet('player', 'the_knight.png', {
-            frameWidth: 32,
-            frameHeight: 32
-        });
 
-
+        this.load.spritesheet('player', 'the_knight.png', { frameWidth: 32, frameHeight: 32 });
 
     }
 
