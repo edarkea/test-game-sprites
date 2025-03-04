@@ -11,7 +11,7 @@ export class Game extends Scene {
     private scaleSize: number = 1;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private frameRate: number = 10;
-    
+
     private layerBackground: Phaser.Tilemaps.TilemapLayer | null | undefined;
     private layerDecoratorUp: Phaser.Tilemaps.TilemapLayer | null | undefined;
     private layerDecoratorBack: Phaser.Tilemaps.TilemapLayer | null | undefined;
@@ -48,22 +48,23 @@ export class Game extends Scene {
         this.layerBackground = map.createLayer('background', tilesetMountain, positionXLayer, positionYLayer)?.setScale(this.scaleSize);
         this.layerDecoratorBack = map.createLayer('decoration-back', tilesetMountain, positionXLayer, positionYLayer)?.setScale(this.scaleSize);
         this.layerDecoratorUp = map.createLayer('decoration-up', tilesetMountain, positionXLayer, positionYLayer)?.setScale(this.scaleSize);
-        
+
         if (!this.layerBackground || !this.layerDecoratorBack || !this.layerDecoratorUp) {
             return;
         }
-        
+
         this.player = this.physics.add.sprite(centerX, centerY, 'player').setScale(this.scaleSize);
-        
+
         this.player.setCollideWorldBounds(true);
         this.cameras.main.startFollow(this.player);
-        
+
         this.layerBackground.setDepth(0);
         this.layerDecoratorBack.setDepth(1);
         this.player.setDepth(2);
         this.layerDecoratorUp.setDepth(3);
 
         const collisionObjects = map.getObjectLayer('collisions');
+
         if (collisionObjects) {
             // Crear un grupo de colisiones estáticas
             const collisionGroup = this.physics.add.staticGroup();
@@ -71,8 +72,8 @@ export class Game extends Scene {
             collisionObjects.objects.forEach(obj => {
                 const collidesProp = obj.properties.find((p: any) => p.name === 'collides' && p.value);
                 if (collidesProp) {
-                    const positionX = (centerX - (map.widthInPixels / 2)) + (obj.x || 0) + (obj.width || 0) / 2;
-                    const positionY = (centerY - (map.heightInPixels / 2)) + (obj.y || 0) + (obj.height || 0) / 2;
+                    const positionX = positionXLayer + (obj.x || 0) + (obj.width || 0) / 2;
+                    const positionY = positionYLayer + (obj.y || 0) + (obj.height || 0) / 2;
 
                     const collisionRect = collisionGroup.create(positionX * this.scaleSize, positionY * this.scaleSize, undefined);
                     collisionRect.setSize((obj.width || 32) * this.scaleSize, (obj.height || 32) * this.scaleSize);
@@ -168,22 +169,36 @@ export class Game extends Scene {
         let velocityY = 0;
 
         if (this.cursors.left.isDown) {
-            velocityX = -this.velocityX;
+            velocityX += -this.velocityX;
             this.player.play('walk-left', true);
         } else if (this.cursors.right.isDown) {
-            velocityX = this.velocityX;
+            velocityX += this.velocityX;
             this.player.play('walk-right', true);
         } else if (this.cursors.up.isDown) {
-            velocityY = -this.velocityY;
+            velocityY += -this.velocityY;
             this.player.play('walk-up', true);
         } else if (this.cursors.down.isDown) {
-            velocityY = this.velocityY;
+            velocityY += this.velocityY;
             this.player.play('walk-down', true);
         } else if (velocityX === 0 && velocityY === 0) {
             this.player.stop();
         }
 
-        // Aquí aplicamos la velocidad al jugador
+        if (this.cursors.shift.isDown && this.cursors.right.isDown) {
+            velocityX += 100;
+        }
+        if (this.cursors.shift.isDown && this.cursors.left.isDown) {
+            velocityX -= 100;
+        }
+
+        if (this.cursors.shift.isDown && this.cursors.up.isDown) {
+            velocityY -= 100;
+        }
+
+        if (this.cursors.shift.isDown && this.cursors.down.isDown) {
+            velocityY += 100;
+        }
+
         this.player.setVelocity(velocityX, velocityY);
 
         const currentFrame = this.player.anims.currentFrame?.index;
