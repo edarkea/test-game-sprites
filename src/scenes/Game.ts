@@ -2,12 +2,18 @@ import { Scene } from 'phaser';
 
 export class Game extends Scene {
 
-    private scaleSize: number = 1.5;
+    private readonly velocity: number = 200;
+    private velocityX: number = this.velocity;
+    private velocityY: number = this.velocity;
+
+
+    private scaleSize: number = 1;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private frameRate: number = 10;
-    private velocity: number = 2;
 
-    private layerMountain: Phaser.Tilemaps.TilemapLayer | null | undefined;
+    private layerBackground: Phaser.Tilemaps.TilemapLayer | null | undefined;
+    private layerDecorator: Phaser.Tilemaps.TilemapLayer | null | undefined;
+
     private player: Phaser.Physics.Arcade.Sprite;
 
     constructor() {
@@ -28,25 +34,30 @@ export class Game extends Scene {
         const centerY = this.cameras.main.height / 2;
 
         const map = this.make.tilemap({ key: 'map' });
-        const tileset = map.addTilesetImage('mountain_landscape', 'mountain');
-        if (!tileset) {
+        const tilesetMountain = map.addTilesetImage('mountain_landscape', 'mountain');
+
+        if (!tilesetMountain) {
             return;
         }
 
-        this.layerMountain = map.createLayer('background', tileset, centerX - 160, centerY - 160)?.setScale(this.scaleSize);
-        
-        if(!this.layerMountain){
+        this.layerBackground = map.createLayer('background', tilesetMountain, centerX - 160, centerY - 160)?.setScale(this.scaleSize);
+        this.layerDecorator = map.createLayer('decoration', tilesetMountain, centerX - 160, centerY - 160)?.setScale(this.scaleSize);
+        if (!this.layerBackground || !this.layerDecorator) {
             return;
         }
+
+        this.layerDecorator.setCollisionByProperty({ collides: true });
+        /* this.showDebugCollisions(); */
 
         this.player = this.physics.add.sprite(centerX, centerY, 'player').setScale(this.scaleSize);
-
-        this.cameras.main.startFollow(this.player, false, 0, 0);
         /* this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels); */
+        this.player.setCollideWorldBounds(true);
 
-        this.layerMountain.setCollision(5); // El tile 5 es un "camino bloqueado"
+        this.physics.add.collider(this.player, this.layerDecorator);
 
-        this.physics.add.collider(this.player, this.layerMountain);
+        this.cameras.main.startFollow(this.player);
+
+
 
         if (this.input.keyboard) {
             this.cursors = this.input.keyboard.createCursorKeys();
@@ -67,7 +78,6 @@ export class Game extends Scene {
             frameRate: this.frameRate,
             repeat: -1,
         });
-
 
         anims.create({
             key: 'walk-up',
@@ -114,34 +124,40 @@ export class Game extends Scene {
 
     moveMap(): void {
         if (this.cursors.left.isDown) {
-            this.cameras.main.scrollX -= this.velocity;
+            this.cameras.main.scrollX -= this.velocityX;
         } else if (this.cursors.right.isDown) {
-            this.cameras.main.scrollX += this.velocity;
+            this.cameras.main.scrollX += this.velocityX;
         } else if (this.cursors.up.isDown) {
-            this.cameras.main.scrollY -= this.velocity;
+            this.cameras.main.scrollY -= this.velocityY;
         } else if (this.cursors.down.isDown) {
-            this.cameras.main.scrollY += this.velocity;
+            this.cameras.main.scrollY += this.velocityY;
         }
     }
 
 
     moveCharacter(): void {
+
+        let velocityX = 0;
+        let velocityY = 0;
+
         if (this.cursors.left.isDown) {
-            this.player.x -= this.velocity;
+            velocityX = -this.velocityX;
             this.player.play('walk-left', true);
         } else if (this.cursors.right.isDown) {
-            this.player.x += this.velocity;
+            velocityX = this.velocityX;
             this.player.play('walk-right', true);
         } else if (this.cursors.up.isDown) {
-            this.player.y -= this.velocity;
+            velocityY = -this.velocityY;
             this.player.play('walk-up', true);
         } else if (this.cursors.down.isDown) {
-            this.player.y += this.velocity;
+            velocityY = this.velocityY;
             this.player.play('walk-down', true);
-        } else {
+        } else if (velocityX === 0 && velocityY === 0) {
             this.player.stop();
         }
 
+        // Aquí aplicamos la velocidad al jugador
+        this.player.setVelocity(velocityX, velocityY);
 
         const currentFrame = this.player.anims.currentFrame?.index;
 
@@ -161,5 +177,13 @@ export class Game extends Scene {
             this.player.setFlipX(true);
         }
     }
+
+    /* private showDebugCollisions(): void {
+        const debugGraphics = this.add.graphics().setAlpha(0.7);
+        this.layerDecorator?.renderDebug(debugGraphics, {
+            tileColor: null,
+            collidingTileColor: new Phaser.Display.Color(243, 234, 48, 255),
+        });
+    } */
 
 }
