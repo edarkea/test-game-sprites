@@ -1,4 +1,12 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "format":"json",
+         "target":"..\/desert.json"
+        }
+    },
  "height":10,
  "infinite":false,
  "layers":[
@@ -222,7 +230,7 @@
         {
          "columns":16,
          "firstgid":1,
-         "image":"desert\/mountain_landscape.png",
+         "image":"mountain_landscape.png",
          "imageheight":512,
          "imagewidth":512,
          "margin":0,

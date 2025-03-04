@@ -7,9 +7,11 @@ export class Game extends Scene {
 
     private velocityX: number = this.velocity;
     private velocityY: number = this.velocity;
+
     private scaleSize: number = 1;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private frameRate: number = 10;
+    
     private layerBackground: Phaser.Tilemaps.TilemapLayer | null | undefined;
     private layerDecoratorUp: Phaser.Tilemaps.TilemapLayer | null | undefined;
     private layerDecoratorBack: Phaser.Tilemaps.TilemapLayer | null | undefined;
@@ -23,8 +25,8 @@ export class Game extends Scene {
     preload() {
         this.load.setPath('assets');
         // Cargar la hoja de sprites (tileset)
-        this.load.tilemapTiledJSON('map', 'maps/desert.json');
-        this.load.image('mountain', 'maps/mountain_landscape.png');
+        this.load.tilemapTiledJSON('map', 'maps/desert/desert.json');
+        this.load.image('mountain', 'maps/desert/mountain_landscape.png');
         this.load.spritesheet('player', 'the_knight.png', { frameWidth: this.spriteSize, frameHeight: this.spriteSize });
     }
 
@@ -33,21 +35,27 @@ export class Game extends Scene {
         const centerY = (this.cameras.main.height / 2);
 
         const map = this.make.tilemap({ key: 'map' });
+
         const tilesetMountain = map.addTilesetImage('mountain_landscape', 'mountain');
 
         if (!tilesetMountain) {
             return;
         }
 
-        this.layerBackground = map.createLayer('background', tilesetMountain, centerX - (map.widthInPixels / 2), centerY - (map.heightInPixels / 2))?.setScale(this.scaleSize);
-        this.layerDecoratorBack = map.createLayer('decoration-back', tilesetMountain, centerX - (map.widthInPixels / 2), centerY - (map.heightInPixels / 2))?.setScale(this.scaleSize);
-        this.layerDecoratorUp = map.createLayer('decoration-up', tilesetMountain, centerX - (map.widthInPixels / 2), centerY - (map.heightInPixels / 2))?.setScale(this.scaleSize);
+        const positionXLayer = centerX - (map.widthInPixels / 2);
+        const positionYLayer = centerY - (map.heightInPixels / 2);
+
+        this.layerBackground = map.createLayer('background', tilesetMountain, positionXLayer, positionYLayer)?.setScale(this.scaleSize);
+        this.layerDecoratorBack = map.createLayer('decoration-back', tilesetMountain, positionXLayer, positionYLayer)?.setScale(this.scaleSize);
+        this.layerDecoratorUp = map.createLayer('decoration-up', tilesetMountain, positionXLayer, positionYLayer)?.setScale(this.scaleSize);
+        
         if (!this.layerBackground || !this.layerDecoratorBack || !this.layerDecoratorUp) {
             return;
         }
         
         this.player = this.physics.add.sprite(centerX, centerY, 'player').setScale(this.scaleSize);
-        this.player.setCollideWorldBounds(true)
+        
+        this.player.setCollideWorldBounds(true);
         this.cameras.main.startFollow(this.player);
         
         this.layerBackground.setDepth(0);
@@ -196,13 +204,5 @@ export class Game extends Scene {
             this.player.setFlipX(true);
         }
     }
-
-    /* private showDebugCollisions(): void {
-        const debugGraphics = this.add.graphics().setAlpha(0.7);
-        this.layerDecorator?.renderDebug(debugGraphics, {
-            tileColor: null,
-            collidingTileColor: new Phaser.Display.Color(243, 234, 48, 255),
-        });
-    } */
 
 }
