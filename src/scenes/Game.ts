@@ -2,18 +2,17 @@ import { Scene } from 'phaser';
 
 export class Game extends Scene {
 
-    private readonly velocity: number = 200;
+    private readonly velocity: number = 300;
+    private readonly spriteSize: number = 32;
+
     private velocityX: number = this.velocity;
     private velocityY: number = this.velocity;
-
-
     private scaleSize: number = 1;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private frameRate: number = 10;
-
     private layerBackground: Phaser.Tilemaps.TilemapLayer | null | undefined;
-    private layerDecorator: Phaser.Tilemaps.TilemapLayer | null | undefined;
-
+    private layerDecoratorUp: Phaser.Tilemaps.TilemapLayer | null | undefined;
+    private layerDecoratorBack: Phaser.Tilemaps.TilemapLayer | null | undefined;
     private player: Phaser.Physics.Arcade.Sprite;
 
     constructor() {
@@ -26,12 +25,12 @@ export class Game extends Scene {
         // Cargar la hoja de sprites (tileset)
         this.load.tilemapTiledJSON('map', 'maps/desert.json');
         this.load.image('mountain', 'maps/mountain_landscape.png');
-        this.load.spritesheet('player', 'the_knight.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('player', 'the_knight.png', { frameWidth: this.spriteSize, frameHeight: this.spriteSize });
     }
 
     create() {
-        const centerX = this.cameras.main.width / 2;
-        const centerY = this.cameras.main.height / 2;
+        const centerX = (this.cameras.main.width / 2);
+        const centerY = (this.cameras.main.height / 2);
 
         const map = this.make.tilemap({ key: 'map' });
         const tilesetMountain = map.addTilesetImage('mountain_landscape', 'mountain');
@@ -40,22 +39,42 @@ export class Game extends Scene {
             return;
         }
 
-        this.layerBackground = map.createLayer('background', tilesetMountain, centerX - 160, centerY - 160)?.setScale(this.scaleSize);
-        this.layerDecorator = map.createLayer('decoration', tilesetMountain, centerX - 160, centerY - 160)?.setScale(this.scaleSize);
-        if (!this.layerBackground || !this.layerDecorator) {
+        this.layerBackground = map.createLayer('background', tilesetMountain, centerX - (map.widthInPixels / 2), centerY - (map.heightInPixels / 2))?.setScale(this.scaleSize);
+        this.layerDecoratorBack = map.createLayer('decoration-back', tilesetMountain, centerX - (map.widthInPixels / 2), centerY - (map.heightInPixels / 2))?.setScale(this.scaleSize);
+        this.layerDecoratorUp = map.createLayer('decoration-up', tilesetMountain, centerX - (map.widthInPixels / 2), centerY - (map.heightInPixels / 2))?.setScale(this.scaleSize);
+        if (!this.layerBackground || !this.layerDecoratorBack || !this.layerDecoratorUp) {
             return;
         }
-
-        this.layerDecorator.setCollisionByProperty({ collides: true });
-        /* this.showDebugCollisions(); */
-
+        
         this.player = this.physics.add.sprite(centerX, centerY, 'player').setScale(this.scaleSize);
-        /* this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels); */
-        this.player.setCollideWorldBounds(true);
-
-        this.physics.add.collider(this.player, this.layerDecorator);
-
+        this.player.setCollideWorldBounds(true)
         this.cameras.main.startFollow(this.player);
+        
+        this.layerBackground.setDepth(0);
+        this.layerDecoratorBack.setDepth(1);
+        this.player.setDepth(2);
+        this.layerDecoratorUp.setDepth(3);
+
+        const collisionObjects = map.getObjectLayer('collisions');
+        if (collisionObjects) {
+            // Crear un grupo de colisiones estáticas
+            const collisionGroup = this.physics.add.staticGroup();
+
+            collisionObjects.objects.forEach(obj => {
+                const collidesProp = obj.properties.find((p: any) => p.name === 'collides' && p.value);
+                if (collidesProp) {
+                    const positionX = (centerX - (map.widthInPixels / 2)) + (obj.x || 0) + (obj.width || 0) / 2;
+                    const positionY = (centerY - (map.heightInPixels / 2)) + (obj.y || 0) + (obj.height || 0) / 2;
+
+                    const collisionRect = collisionGroup.create(positionX * this.scaleSize, positionY * this.scaleSize, undefined);
+                    collisionRect.setSize((obj.width || 32) * this.scaleSize, (obj.height || 32) * this.scaleSize);
+                    collisionRect.setVisible(false); // Oculta las colisiones
+                }
+            });
+
+            // Detectar colisiones entre el jugador y las áreas
+            this.physics.add.collider(this.player, collisionGroup);
+        }
 
 
 

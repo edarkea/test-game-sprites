@@ -5,18 +5,19 @@ import { AUTO, Game, Scale, Types } from 'phaser';
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
 const config: Types.Core.GameConfig = {
     type: AUTO,
-    width: 320,
-    height: 320,
+    width: 1024,
+    height: 720,
     parent: 'game-container',
     backgroundColor: '#000',
     scale: {
-        mode: Scale.FIT,
+        mode: Scale.ENVELOP,
         autoCenter: Scale.CENTER_BOTH,
     },
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true,
+            debug: false,
+            fps: 60
         },
     },
     scene: [
