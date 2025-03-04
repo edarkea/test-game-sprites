@@ -7,6 +7,9 @@ const config: Types.Core.GameConfig = {
     height: 720,
     parent: 'game-container',
     backgroundColor: '#000',
+    input: {
+        gamepad: true
+    },
     scale: {
         mode: Scale.ENVELOP,
         autoCenter: Scale.CENTER_BOTH,

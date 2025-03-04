@@ -168,36 +168,48 @@ export class Game extends Scene {
         let velocityX = 0;
         let velocityY = 0;
 
-        if (this.cursors.left.isDown) {
-            velocityX += -this.velocityX;
+        let axisH = 0;
+        let axisV = 0;
+
+        let run = 0;
+        let isPressedR1 = 0;
+
+        if (this.input.gamepad && this.input.gamepad.total > 0) {
+            const pad = this.input.gamepad.getPad(0);
+            if (pad.axes.length) {
+                axisH = pad.axes[0].getValue();
+                axisV = pad.axes[1].getValue();
+            }
+            isPressedR1 = pad.R1;
+        }
+        
+        if (this.cursors.shift.isDown || isPressedR1 === 1) {
+            run = 100;
+        } else {
+            run = 0;
+        }
+
+
+        if (this.cursors.left.isDown || axisH < 0) {
+            velocityX += -this.velocityX - run;
             this.player.play('walk-left', true);
-        } else if (this.cursors.right.isDown) {
-            velocityX += this.velocityX;
+        } else if (this.cursors.right.isDown || axisH > 0) {
+            velocityX += this.velocityX + run;
             this.player.play('walk-right', true);
-        } else if (this.cursors.up.isDown) {
-            velocityY += -this.velocityY;
+        } else if (this.cursors.up.isDown || axisV < 0) {
+            velocityY += -this.velocityY - run;
             this.player.play('walk-up', true);
-        } else if (this.cursors.down.isDown) {
-            velocityY += this.velocityY;
+        } else if (this.cursors.down.isDown || axisV > 0) {
+            velocityY += this.velocityY + run;
             this.player.play('walk-down', true);
-        } else if (velocityX === 0 && velocityY === 0) {
+        } else if ((velocityX === 0 && velocityY === 0) && (axisV == 0 && axisV == 0)) {
             this.player.stop();
         }
 
-        if (this.cursors.shift.isDown && this.cursors.right.isDown) {
-            velocityX += 100;
-        }
-        if (this.cursors.shift.isDown && this.cursors.left.isDown) {
-            velocityX -= 100;
-        }
+        this.onMoveCharacter(velocityX, velocityY);
+    }
 
-        if (this.cursors.shift.isDown && this.cursors.up.isDown) {
-            velocityY -= 100;
-        }
-
-        if (this.cursors.shift.isDown && this.cursors.down.isDown) {
-            velocityY += 100;
-        }
+    onMoveCharacter(velocityX: number, velocityY: number) {
 
         this.player.setVelocity(velocityX, velocityY);
 
@@ -218,6 +230,7 @@ export class Game extends Scene {
         if (this.player.anims.currentAnim?.key === 'walk-left') {
             this.player.setFlipX(true);
         }
+
     }
 
 }
